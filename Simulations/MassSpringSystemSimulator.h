@@ -47,8 +47,13 @@ private:
 	float m_fMass;
 	float m_fStiffness;
 	float m_fDamping;
+	float m_fInitialLength;
 	int m_iIntegrator;
-
+	int m_iNumMass;
+	int m_iNumSpring;
+	vector<Vec3> PositionOfMassPoint;
+	vector<Vec3> VelocityOfMassPoint;
+	vector<Vec3> NetForceOfMassPoint;
 	// UI Attributes
 	Vec3 m_externalForce;
 	Point2D m_mouse;
