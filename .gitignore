@@ -1,0 +1,14 @@
+*.vs
+*Win32/
+*Debug/
+*Release/
+*.tlog
+*.iobj
+*.obj
+*.user
+*.lastbuildstate
+*.recipe
+*.ipdb
+*.log
+*.pdb
+
