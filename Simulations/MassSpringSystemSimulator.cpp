@@ -19,7 +19,15 @@ void MassSpringSystemSimulator::reset() {
 	m_oldtrackmouse.x = m_oldtrackmouse.y = 0;
 }
 void MassSpringSystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext) {
-
+	DUC->setUpLighting(Vec3(), 0.4 * Vec3(1, 1, 1), 100, Vec3(0, 0, 1));
+	for (int i = 0; i < m_iNumMass; i++) {
+		DUC->drawSphere(getPositionOfMassPoint(i), 0.05f);
+	}
+	for (int i = 0; i < m_iNumSpring; i++) {
+		DUC->beginLine();
+		DUC->drawLine(getPositionOfMassPoint(Spring[i].first), Vec3(0, 1, 0), getPositionOfMassPoint(Spring[i].second), Vec3(0, 1, 0));
+		DUC->endLine();
+	}
 }
 void MassSpringSystemSimulator::notifyCaseChanged(int testCase) {
 	m_iTestCase = testCase;

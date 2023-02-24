@@ -54,6 +54,7 @@ private:
 	vector<Vec3> PositionOfMassPoint;
 	vector<Vec3> VelocityOfMassPoint;
 	vector<Vec3> NetForceOfMassPoint;
+	vector<pair<int, int>> Spring;
 	// UI Attributes
 	Vec3 m_externalForce;
 	Point2D m_mouse;
