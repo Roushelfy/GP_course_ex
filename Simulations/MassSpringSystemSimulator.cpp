@@ -3,7 +3,7 @@ MassSpringSystemSimulator::MassSpringSystemSimulator() {
 
 }
 const  char* MassSpringSystemSimulator::getTestCasesStr() {
-
+	return "One-step,Euler,Midpoint,Mixed_Simulation";
 }
 void MassSpringSystemSimulator::initUI(DrawingUtilitiesClass* DUC) {
 
