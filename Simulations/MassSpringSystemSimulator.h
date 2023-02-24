@@ -11,7 +11,7 @@
 
 class MassSpringSystemSimulator :public Simulator {
 public:
-	// Construtors test
+	// Construtors test test2
 	MassSpringSystemSimulator();
 
 	// UI Functions
