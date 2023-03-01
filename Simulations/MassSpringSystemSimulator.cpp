@@ -4,13 +4,14 @@ MassSpringSystemSimulator::MassSpringSystemSimulator() {
 	m_fMass = 10;
 	m_fInitialLength = 1;
 	m_fStiffness = 40;
-	m_fDamping = 0;
+	m_fDamping = 1;
 	m_iNumMass = 0;
 	m_iNumSpring = 0;
 	m_externalForce = Vec3();
+	Max_num = 10;
 }
 const  char* MassSpringSystemSimulator::getTestCasesStr() {
-	return "Euler,Midpoint";
+	return "Euler,Midpoint,complexEuler,complexMidpoint";
 }
 void MassSpringSystemSimulator::initUI(DrawingUtilitiesClass* DUC) {
 	//cout << "called" << endl;
@@ -22,16 +23,36 @@ void MassSpringSystemSimulator::initUI(DrawingUtilitiesClass* DUC) {
 	Spring.clear();
 	m_iNumMass = 0;
 	m_iNumSpring = 0;
+	m_externalForce = Vec3();
 	switch (m_iTestCase)
 	{
 	case 0:
 	case 1:
-		addMassPoint(Vec3(0, 0, 0), Vec3(-1, 0, 0), 0);
-		addMassPoint(Vec3(0, 2, 0), Vec3(1, 0, 0), 0);
+		addMassPoint(Vec3(0, 0, 0), Vec3(1, 0, 0), 0);
+		addMassPoint(Vec3(0, 2, 0), Vec3(-1, 0, 0), 0);
 		addSpring(0, 1, m_fInitialLength);
 		break;
-	case 2:break;
-	default:break;
+	case 2:
+	case 3:
+		m_externalForce = Vec3(0, -50, 0);
+		std::random_device rd;
+		std::mt19937 eng(rd());
+		std::uniform_int_distribution<int> randindex(1, Max_num - 1);
+		std::uniform_real_distribution<float> randPos(-0.5f, 0.5f);
+		Vec3 sumv = Vec3();
+		for (int i = 0; i < Max_num - 1; i++)
+		{
+			addMassPoint(Vec3(randPos(eng), randPos(eng), randPos(eng)), Vec3(randPos(eng), randPos(eng), randPos(eng)), 0);
+			sumv += VelocityOfMassPoint[i];
+			int ranindex = randindex(eng);
+			while (ranindex == i) ranindex = randindex(eng);
+			addSpring(i, ranindex, m_fInitialLength);
+		}
+		addMassPoint(Vec3(randPos(eng), randPos(eng), randPos(eng)), -sumv, 0);
+		int ranindex = randindex(eng);
+		while (ranindex == Max_num - 1) ranindex = randindex(eng);
+		addSpring(Max_num - 1, ranindex, m_fInitialLength);
+		break;
 	}
 }
 void MassSpringSystemSimulator::reset() {
@@ -60,6 +81,9 @@ void MassSpringSystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateCont
 void MassSpringSystemSimulator::notifyCaseChanged(int testCase) {
 	m_iTestCase = testCase;
 }
+void MassSpringSystemSimulator::notifyGravityChanged(float gravity) {
+	if (m_iTestCase > 1)m_externalForce.y = -gravity;
+}
 void MassSpringSystemSimulator::externalForcesCalculations(float timeElapsed) {
 	//cout << "called!" << endl;
 	for (int i = 0; i < m_iNumMass; i++)
@@ -85,14 +109,14 @@ void MassSpringSystemSimulator::externalForcesCalculations(float timeElapsed) {
 	}
 }
 void MassSpringSystemSimulator::simulateTimestep(float timeStep) {
-	if (m_iTestCase == 0)
+	if (m_iTestCase == 0 || m_iTestCase == 2)
 		for (int i = 0; i < m_iNumMass; i++)
 		{
 			if (IsFixedMassPoint[i]) continue;
 			PositionOfMassPoint[i] += timeStep * VelocityOfMassPoint[i];
 			VelocityOfMassPoint[i] += timeStep * NetForceOfMassPoint[i] / m_fMass;
 		}
-	else if (m_iTestCase == 1)
+	else if (m_iTestCase == 1 || m_iTestCase == 3)
 	{
 		vector<Vec3> storex, storev;
 		storex = PositionOfMassPoint;
@@ -111,7 +135,15 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep) {
 			VelocityOfMassPoint[i] = storev[i] + timeStep * NetForceOfMassPoint[i] / m_fMass;
 		}
 	}
-
+	if (m_iTestCase == 2 || m_iTestCase == 3)
+		for (int i = 0; i < m_iNumMass; i++)
+		{
+			if (PositionOfMassPoint[i].y <= -1) {
+				PositionOfMassPoint[i].y = -0.99;
+				VelocityOfMassPoint[i].y *= -1;
+				//cout << "co!" << endl;
+			}
+		}
 }
 void MassSpringSystemSimulator::onClick(int x, int y) {
 	m_trackmouse.x = x;

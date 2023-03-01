@@ -20,6 +20,7 @@ public:
 	void reset();
 	void drawFrame(ID3D11DeviceContext* pd3dImmediateContext);
 	void notifyCaseChanged(int testCase);
+	void notifyGravityChanged(float gravity);
 	void externalForcesCalculations(float timeElapsed);
 	void simulateTimestep(float timeStep);
 	void onClick(int x, int y);
@@ -51,6 +52,7 @@ private:
 	int m_iIntegrator;
 	int m_iNumMass;
 	int m_iNumSpring;
+	int Max_num;
 	vector<Vec3> PositionOfMassPoint;
 	vector<Vec3> VelocityOfMassPoint;
 	vector<int> IsFixedMassPoint;
