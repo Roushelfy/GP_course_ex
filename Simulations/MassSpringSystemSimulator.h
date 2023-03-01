@@ -53,6 +53,7 @@ private:
 	int m_iNumSpring;
 	vector<Vec3> PositionOfMassPoint;
 	vector<Vec3> VelocityOfMassPoint;
+	vector<int> IsFixedMassPoint;
 	vector<Vec3> NetForceOfMassPoint;
 	vector<pair<int, int>> Spring;
 	// UI Attributes

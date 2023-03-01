@@ -20,8 +20,8 @@ using namespace GamePhysics;
 
 //#define ADAPTIVESTEP
 
-#define TEMPLATE_DEMO
-//#define MASS_SPRING_SYSTEM
+//#define TEMPLATE_DEMO
+#define MASS_SPRING_SYSTEM
 //#define RIGID_BODY_SYSTEM
 //#define SPH_SYSTEM
 
@@ -254,6 +254,7 @@ void CALLBACK OnFrameMove(double dTime, float fElapsedTime, void* pUserContext)
 		g_iPreTestCase = g_iTestCase;
 	}
 	if (!g_bSimulateByStep) {
+		//cout << "1" << endl;
 #ifdef ADAPTIVESTEP
 		g_pSimulator->externalForcesCalculations(fElapsedTime);
 		static float timeAcc = 0;
@@ -274,6 +275,7 @@ void CALLBACK OnFrameMove(double dTime, float fElapsedTime, void* pUserContext)
 #endif
 	}
 	else {
+		//cout << "2" << endl;
 		if (DXUTIsKeyDown(VK_SPACE))
 			g_pSimulator->simulateTimestep(g_fTimestep);
 		if (DXUTIsKeyDown('S') && firstTime)
