@@ -56,8 +56,8 @@ public:
 	so that the needed changes can be handed here
 	**for more info on how to use this function take a look at the template simulator
 	*/
-	virtual void notifyCaseChanged(int testCase) = 0;
 	virtual void notifyGravityChanged(float gravity) = 0;
+	virtual void notifyCaseChanged(int testCase) = 0;
 	/*
 	this function is used to receive the input from the mouse
 	input x,y: the click position in pixels

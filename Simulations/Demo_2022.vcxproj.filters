@@ -1,3 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <FxCompile Include="effect.fx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="MassSpringSystemSimulator.cpp" />
+    <ClCompile Include="TemplateSimulator.cpp" />
+    <ClCompile Include="util\FFmpeg.cpp" />
+    <ClCompile Include="util\util.cpp" />
+    <ClCompile Include="RigidBodySystemSimulator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DrawingUtilitiesClass.h" />
+    <ClInclude Include="MassSpringSystemSimulator.h" />
+    <ClInclude Include="Simulator.h" />
+    <ClInclude Include="TemplateSimulator.h" />
+    <ClInclude Include="util\FFmpeg.h" />
+    <ClInclude Include="util\matrixbase.h" />
+    <ClInclude Include="util\quaternion.h" />
+    <ClInclude Include="util\timer.h" />
+    <ClInclude Include="util\util.h" />
+    <ClInclude Include="util\vectorbase.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readme.txt" />
+  </ItemGroup>
 </Project>
