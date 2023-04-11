@@ -21,8 +21,8 @@ using namespace GamePhysics;
 //#define ADAPTIVESTEP
 
 //#define TEMPLATE_DEMO
-#define MASS_SPRING_SYSTEM
-//#define RIGID_BODY_SYSTEM
+//#define MASS_SPRING_SYSTEM
+#define RIGID_BODY_SYSTEM
 //#define SPH_SYSTEM
 
 #ifdef TEMPLATE_DEMO
@@ -32,7 +32,7 @@ using namespace GamePhysics;
 #include "MassSpringSystemSimulator.h"
 #endif
 #ifdef RIGID_BODY_SYSTEM
-//#include "RigidBodySystemSimulator.h"
+#include "RigidBodySystemSimulator.h"
 #endif
 #ifdef SPH_SYSTEM
 //#include "SPHSystemSimulator.h"
@@ -41,7 +41,7 @@ using namespace GamePhysics;
 DrawingUtilitiesClass* g_pDUC;
 Simulator* g_pSimulator;
 float 	g_fTimestep = 0.001;
-float gravity = 10;
+float gravity = 0;
 #ifdef ADAPTIVESTEP
 float   g_fTimeFactor = 1;
 #endif
@@ -66,9 +66,7 @@ void initTweakBar() {
 	TwAddVarRW(g_pDUC->g_pTweakBar, "RunStep", TW_TYPE_BOOLCPP, &g_bSimulateByStep, "");
 	TwAddVarRW(g_pDUC->g_pTweakBar, "Draw Simulation", TW_TYPE_BOOLCPP, &g_bDraw, "");
 	TwAddVarRW(g_pDUC->g_pTweakBar, "Timestep", TW_TYPE_FLOAT, &g_fTimestep, "step=0.0001 min=0.0001");
-#ifdef MASS_SPRING_SYSTEM
-	TwAddVarRW(g_pDUC->g_pTweakBar, "Gravity", TW_TYPE_FLOAT, &gravity, "step=1 min=0");
-#endif
+	TwAddVarRW(g_pDUC->g_pTweakBar, "Gravity", TW_TYPE_FLOAT, &gravity, "step=1 min=-100");
 #ifdef ADAPTIVESTEP
 	TwAddVarRW(g_pDUC->g_pTweakBar, "Time Factor", TW_TYPE_FLOAT, &g_fTimeFactor, "step=0.01   min=0.01");
 #endif
@@ -257,9 +255,8 @@ void CALLBACK OnFrameMove(double dTime, float fElapsedTime, void* pUserContext)
 		g_pSimulator->initUI(g_pDUC);
 		g_iPreTestCase = g_iTestCase;
 	}
-#ifdef MASS_SPRING_SYSTEM
 	g_pSimulator->notifyGravityChanged(gravity);
-#endif
+
 	if (!g_bSimulateByStep) {
 		//cout << "1" << endl;
 #ifdef ADAPTIVESTEP
@@ -377,7 +374,7 @@ int main(int argc, char* argv[])
 	g_pSimulator = new MassSpringSystemSimulator();
 #endif
 #ifdef RIGID_BODY_SYSTEM
-	//g_pSimulator= new RigidBodySystemSimulator();
+	g_pSimulator = new RigidBodySystemSimulator();
 #endif
 #ifdef SPH_SYSTEM
 	//g_pSimulator= new SPHSystemSimulator();
