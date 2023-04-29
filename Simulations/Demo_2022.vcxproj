@@ -224,6 +224,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="flip.cpp" />
     <ClCompile Include="MassSpringSystemSimulator.cpp" />
     <ClCompile Include="RigidBodySystemSimulator.cpp" />
     <ClCompile Include="TemplateSimulator.cpp" />
@@ -233,6 +234,7 @@
   <ItemGroup>
     <ClInclude Include="collisionDetect.h" />
     <ClInclude Include="DrawingUtilitiesClass.h" />
+    <ClInclude Include="flip.h" />
     <ClInclude Include="MassSpringSystemSimulator.h" />
     <ClInclude Include="RigidBodySystemSimulator.h" />
     <ClInclude Include="Simulator.h" />

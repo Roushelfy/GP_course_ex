@@ -4,7 +4,7 @@ RigidBodySystemSimulator::RigidBodySystemSimulator() {
 	m_mouse.x = m_mouse.y = 0;
 	m_trackmouse.x = m_trackmouse.y = 0;
 	m_oldtrackmouse.x = m_oldtrackmouse.y = 0;
-	coefficient = 1;
+	coefficient = 1.2;
 }
 const  char* RigidBodySystemSimulator::getTestCasesStr() {
 	return "SingleBody,TwoBody,ComplexScene";
