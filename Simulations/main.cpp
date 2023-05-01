@@ -41,7 +41,8 @@ using namespace GamePhysics;
 DrawingUtilitiesClass* g_pDUC;
 Simulator* g_pSimulator;
 float 	g_fTimestep = 0.001;
-float gravity = 0;
+float gravity = 100;
+float lightx = -0.5, lighty = -0.5, lightz = -0.5;
 #ifdef ADAPTIVESTEP
 float   g_fTimeFactor = 1;
 #endif
@@ -67,6 +68,11 @@ void initTweakBar() {
 	TwAddVarRW(g_pDUC->g_pTweakBar, "Draw Simulation", TW_TYPE_BOOLCPP, &g_bDraw, "");
 	TwAddVarRW(g_pDUC->g_pTweakBar, "Timestep", TW_TYPE_FLOAT, &g_fTimestep, "step=0.0001 min=0.0001");
 	TwAddVarRW(g_pDUC->g_pTweakBar, "Gravity", TW_TYPE_FLOAT, &gravity, "step=1 min=-100");
+#ifdef FLIP_SYSTEM
+	TwAddVarRW(g_pDUC->g_pTweakBar, "light_dir_X", TW_TYPE_FLOAT, &lightx, "step=0.1 min=-1");
+	TwAddVarRW(g_pDUC->g_pTweakBar, "light_dir_Y", TW_TYPE_FLOAT, &lighty, "step=0.1 min=-1");
+	TwAddVarRW(g_pDUC->g_pTweakBar, "light_dir_Z", TW_TYPE_FLOAT, &lightz, "step=0.1 min=-1");
+#endif
 #ifdef ADAPTIVESTEP
 	TwAddVarRW(g_pDUC->g_pTweakBar, "Time Factor", TW_TYPE_FLOAT, &g_fTimeFactor, "step=0.01   min=0.01");
 #endif
@@ -256,7 +262,9 @@ void CALLBACK OnFrameMove(double dTime, float fElapsedTime, void* pUserContext)
 		g_iPreTestCase = g_iTestCase;
 	}
 	g_pSimulator->notifyGravityChanged(gravity);
-
+#ifdef FLIP_SYSTEM
+	((FlipSimulator*)g_pSimulator)->m_lightdirection = { lightx,lighty,lightz };
+#endif
 	if (!g_bSimulateByStep) {
 		//cout << "1" << endl;
 #ifdef ADAPTIVESTEP

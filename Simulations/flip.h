@@ -15,6 +15,7 @@ public:
 	float m_fForceScaling;
 	// FLIP/PIC ratio
 	float m_fRatio;
+	float m_freso;
 
 	// grid property
 	int m_iCellX;
@@ -28,7 +29,7 @@ public:
 	int m_iNumSpheres;
 	float m_particleRadius;
 	Vec3 m_gravity;
-
+	Vec3 m_lightdirection;
 	// particle data arrays
 	std::vector<Vec3> m_particlePos;		// Particle Positions
 	std::vector<Vec3> m_particleColor;		// Particle Color for visualization
@@ -131,7 +132,7 @@ public:
 
 		// update particle array
 		m_particlePos.clear(); m_particlePos.resize(m_iNumSpheres, Vec3(0.0f));
-		m_particleColor.clear(); m_particleColor.resize(m_iNumSpheres, Vec3(1.0f));
+		m_particleColor.clear(); m_particleColor.resize(m_iNumSpheres, Vec3(0.0f, 0.0f, 1.0f));
 		m_particleVel.clear(); m_particleVel.resize(m_iNumSpheres, Vec3(0.0f));
 
 		// update grid array
