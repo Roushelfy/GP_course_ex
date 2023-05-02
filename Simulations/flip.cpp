@@ -428,8 +428,10 @@ void FlipSimulator::initUI(DrawingUtilitiesClass* DUC) {
 }
 void FlipSimulator::reset() {}
 void FlipSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext) {
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++) {
+		DUC->g_pEffectPositionNormal->SetLightDirection(i, m_lightdirection.toDirectXVector());
 		DUC->g_pEffectPositionNormalColor->SetLightDirection(i, m_lightdirection.toDirectXVector());
+	}
 	for (int i = 0; i < m_iNumSpheres; i++) {
 		DUC->setUpLighting(Vec3(), Vec3(1.0), 1000, m_particleColor[i]);
 		DUC->drawSphere(m_particlePos[i], m_particleRadius);
