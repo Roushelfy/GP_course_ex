@@ -15,6 +15,15 @@ void FlipSimulator::integrateParticles(float timestep) {
 		m_particleVel[i] += m_gravity * timestep;
 		m_particlePos[i] += m_particleVel[i] * timestep;
 	}
+	obstaclePos += obstacleVel * timestep;
+	if (obstaclePos[2] > 0.4)
+	{
+		obstacleVel = Vec3(5, 0, -5);
+	}
+	else if (obstaclePos[2] < -0.4)
+	{
+		obstacleVel = Vec3(-5, 0, 5);
+	}
 }
 void FlipSimulator::pushParticlesApart(int numIters) {
 	float colorDiffusionCoeff = 0.01f;
@@ -113,9 +122,18 @@ void FlipSimulator::pushParticlesApart(int numIters) {
 }
 void FlipSimulator::handleParticleCollisions(Vec3 obstaclePos, float obstacleRadius, Vec3 obstacleVel) {
 	float minx = -0.5 + m_h + m_particleRadius, maxx = (m_iCellX - 1) * m_h - 0.5 - m_particleRadius;
+	float minDist = obstacleRadius + m_particleRadius;
+	float minDist2 = minDist * minDist;
 	float x, y, z;
+
 	for (int i = 0; i < m_iNumSpheres; i++) {
 		x = m_particlePos[i][0], y = m_particlePos[i][1], z = m_particlePos[i][2];
+		float dx, dy, dz;
+		dx = x - obstaclePos[0], dy = y - obstaclePos[1], dz = z - obstaclePos[2];
+		float d2 = dx * dx + dy * dy + dz * dz;
+		if (d2 < minDist2) {
+			m_particleVel[i] = obstacleVel;
+		}
 		if (x < minx) {
 			m_particlePos[i][0] = minx;
 			m_particleVel[i][0] = 0;
@@ -428,7 +446,7 @@ void FlipSimulator::initUI(DrawingUtilitiesClass* DUC) {
 }
 void FlipSimulator::reset() {}
 void FlipSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext) {
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 2; i++) {
 		DUC->g_pEffectPositionNormal->SetLightDirection(i, m_lightdirection.toDirectXVector());
 		DUC->g_pEffectPositionNormalColor->SetLightDirection(i, m_lightdirection.toDirectXVector());
 	}
@@ -436,10 +454,36 @@ void FlipSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext) {
 		DUC->setUpLighting(Vec3(), Vec3(1.0), 1000, m_particleColor[i]);
 		DUC->drawSphere(m_particlePos[i], m_particleRadius);
 	}
+	DUC->setUpLighting(Vec3(), Vec3(1.0), 1000, { 1,0,0 });
+	DUC->drawSphere(obstaclePos, obstacleRadius);
 }
 void FlipSimulator::notifyCaseChanged(int testCase) {}
 void FlipSimulator::externalForcesCalculations(float timeElapsed) {}
-void FlipSimulator::onClick(int x, int y) {}
+void FlipSimulator::onClick(int x, int y) {
+	obstaclemode = (obstaclemode + 1) % 6;
+	switch (obstaclemode)
+	{
+	case 0:
+		obstacleVel = Vec3();
+		obstaclePos = Vec3(0.0, 0.3, 0.0);
+		break;
+	case 1:
+		obstaclePos = Vec3(-0.3, -0.3, -0.3);
+		break;
+	case 2:
+		obstaclePos = Vec3(-0.3, -0.3, 0.3);
+		break;
+	case 3:
+		obstaclePos = Vec3(0.3, -0.3, 0.3);
+		break;
+	case 4:
+		obstaclePos = Vec3(0.3, -0.3, -0.3);
+		break;
+	case 5:
+		obstacleVel = Vec3(-5, 0, 5);
+		break;
+	}
+}
 void FlipSimulator::onMouse(int x, int y) {}
 void FlipSimulator::notifyGravityChanged(float gravity) {
 	m_gravity.y = -gravity;

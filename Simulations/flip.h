@@ -18,6 +18,7 @@ public:
 	float m_freso;
 
 	// grid property
+	int obstaclemode;
 	int m_iCellX;
 	int m_iCellY;
 	int m_iCellZ;
@@ -34,7 +35,9 @@ public:
 	std::vector<Vec3> m_particlePos;		// Particle Positions
 	std::vector<Vec3> m_particleColor;		// Particle Color for visualization
 	std::vector<Vec3> m_particleVel;		// Particle Velocity
-
+	Vec3 obstaclePos;     // obstacle can be moved with mouse, as a user interaction
+	Vec3 obstacleVel;
+	float obstacleRadius;
 	// grid data arrays
 	std::vector<Vec3>  m_vel;	  	// Velocity array
 	std::vector<Vec3>  m_pre_vel; 	// Hold the previous velocity for flip update
@@ -77,16 +80,13 @@ public:
 		bool compensateDrift = true;
 
 		float flipRatio = m_fRatio; // 0.95f;
-		Vec3 obstaclePos(0.0f);     // obstacle can be moved with mouse, as a user interaction
-		Vec3 obstacleVel(0.0f);
-
 		float sdt = dt / numSubSteps;
 
 		for (int step = 0; step < numSubSteps; step++) {
 			integrateParticles(sdt);
 			if (separateParticles)
 				pushParticlesApart(numParticleIters);
-			handleParticleCollisions(obstaclePos, 0.0, obstacleVel);
+			handleParticleCollisions(obstaclePos, obstacleRadius, obstacleVel);
 			transferVelocities(true, flipRatio);
 			updateParticleDensity();
 			solveIncompressibility(numPressureIters, sdt, overRelaxation, compensateDrift);
@@ -102,14 +102,16 @@ public:
 		float tankHeight = 1.0;
 		float tankWidth = 1.0;
 		float tankDepth = 1.0;
-
+		obstaclemode = 0;
 		float _h = tankHeight / res;
 		float point_r = 0.3 * _h;	// particle radius w.r.t. cell size
 
 		float relWaterHeight = 0.8;
 		float relWaterWidth = 0.6;
 		float relWaterDepth = 0.6;
-
+		obstaclePos = Vec3(0.0, 0.3, 0.0);     // obstacle can be moved with mouse, as a user interaction
+		obstacleVel = Vec3(0.0f);
+		obstacleRadius = 0.1;
 		// dam break
 		// compute number of particles	
 		float dx = 2.0 * point_r;
