@@ -1,11 +1,14 @@
 #include "flip.h"
 #include<cmath>
+#include<omp.h>
+
 FlipSimulator::FlipSimulator() {
+	omp_set_num_threads(16);
 	m_iTestCase = 0;
 	m_mouse.x = m_mouse.y = 0;
 	m_trackmouse.x = m_trackmouse.y = 0;
 	m_oldtrackmouse.x = m_oldtrackmouse.y = 0;
-	m_fRatio = 0.7;
+	m_fRatio = 0.95;
 	m_freso = 22;
 	m_gravity = { 0.0,-9.8,0 };
 	m_lightdirection = { -0.5, -0.5, -0.5 };
@@ -125,7 +128,6 @@ void FlipSimulator::handleParticleCollisions(Vec3 obstaclePos, float obstacleRad
 	float minDist = obstacleRadius + m_particleRadius;
 	float minDist2 = minDist * minDist;
 	float x, y, z;
-
 	for (int i = 0; i < m_iNumSpheres; i++) {
 		x = m_particlePos[i][0], y = m_particlePos[i][1], z = m_particlePos[i][2];
 		float dx, dy, dz;
@@ -253,6 +255,7 @@ void FlipSimulator::transferVelocities(bool toGrid, float flipRatio) {
 		}
 	}
 	//std::fill(m_vel.begin(), m_vel.end(), 0);
+#pragma omp parallel for
 	for (int k = 0; k < 3; k++) {
 		std::fill(Wp.begin(), Wp.end(), 0);
 		std::fill(WpUp.begin(), WpUp.end(), 0);
