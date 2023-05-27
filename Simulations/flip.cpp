@@ -10,7 +10,7 @@ FlipSimulator::FlipSimulator() {
 	m_oldtrackmouse.x = m_oldtrackmouse.y = 0;
 	m_fRatio = 0.95;
 	m_useAffine = 0;
-	m_freso = 22;
+	m_freso = 25;
 	m_gravity = { 0.0,-9.8,0 };
 	m_lightdirection = { -0.5, -0.5, -0.5 };
 }
@@ -357,8 +357,23 @@ void FlipSimulator::transferVelocities(bool toGrid, float flipRatio, bool useAff
 				}
 			}
 		}
-#pragma omp parallel for
 		if (toGrid) {
+
+#pragma omp parallel for
+			for (int i = 0; i < m_iCellX; i++) {
+				for (int j = 0; j < m_iCellX; j++) {
+					for (int k_ = 0; k_ < m_iCellZ; k_++) {
+						bool solid = m_type[i * n + j * m + k_] == SOLID_CELL;
+						if (solid || (i > 0 && m_type[i * (n - 1) + j * m + k_] == SOLID_CELL))
+							m_vel[i * n + j * m + k_][k] = m_pre_vel[i * n + j * m + k_][k];
+						if (solid || (i > 0 && m_type[i * n + j * (m - 1) + k_] == SOLID_CELL))
+							m_vel[i * n + j * m + k_][k] = m_pre_vel[i * n + j * m + k_][k];
+						if (solid || (i > 0 && m_type[i * n + j * m + k_ - 1] == SOLID_CELL))
+							m_vel[i * n + j * m + k_][k] = m_pre_vel[i * n + j * m + k_][k];
+					}
+				}
+			}
+#pragma omp parallel for
 			for (int i = 0; i < m_iNumCells; i++) {
 				if (Wp[i] > 0) {
 					m_pre_vel[i][k] = m_vel[i][k] = WpUp[i] / Wp[i];
