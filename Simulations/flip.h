@@ -36,13 +36,13 @@ public:
 	std::vector<Vec3> m_particlePos;		// Particle Positions
 	std::vector<Vec3> m_particleColor;		// Particle Color for visualization
 	std::vector<Vec3> m_particleVel;		// Particle Velocity
+	std::vector<Mat3> m_particleC;
 	Vec3 obstaclePos;     // obstacle can be moved with mouse, as a user interaction
 	Vec3 obstacleFinalPos;
 	Vec3 obstacleVel;
 	float obstacleRadius;
 	// grid data arrays
 	std::vector<Vec3>  m_vel;	  	// Velocity array
-	std::vector<Mat3>  m_c;
 	std::vector<Vec3>  m_pre_vel; 	// Hold the previous velocity for flip update
 	std::vector<float> m_p; 		// Pressure array
 	std::vector<float> m_s; 		// 0.0 for solid cells, 1.0 for fluid cells, used to update m_type
@@ -58,7 +58,8 @@ public:
 	void pushParticlesApart(int numIters);
 	void handleParticleCollisions(Vec3 obstaclePos, float obstacleRadius, Vec3 obstacleVel);
 	void updateParticleDensity();
-
+	Mat3 vecMultVecT(Vec3 a, Vec3 b);
+	Vec3 MatMultVec(Mat3 M, Vec3 a);
 	void transferVelocities(bool toGrid, float flipRatio, bool useAffine);
 	void solveIncompressibility(int numIters, float dt, float overRelaxation, bool compensateDrift);
 	void updateParticleColors();
@@ -140,6 +141,7 @@ public:
 		m_particlePos.clear(); m_particlePos.resize(m_iNumSpheres, Vec3(0.0f));
 		m_particleColor.clear(); m_particleColor.resize(m_iNumSpheres, Vec3(0.0f, 0.0f, 1.0f));
 		m_particleVel.clear(); m_particleVel.resize(m_iNumSpheres, Vec3(0.0f));
+		m_particleC.clear(); m_particleC.resize(m_iNumSpheres, vector3Dim<Vec3>(Vec3(0.0f)));
 
 		// update grid array
 		m_vel.clear(); m_vel.resize(m_iNumCells, Vec3(0.0f));

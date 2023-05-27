@@ -312,6 +312,16 @@ void FlipSimulator::transferVelocities(bool toGrid, float flipRatio, bool useAff
 				WpUp[nr6] += pv * d6; Wp[nr6] += d6;
 				WpUp[nr7] += pv * d7; Wp[nr7] += d7;
 				WpUp[nr8] += pv * d8; Wp[nr8] += d8;
+				if (useAffine) {
+					WpUp[nr1] += dot(m_particleC[i][k], { -tx,-ty,-tz });
+					WpUp[nr2] += dot(m_particleC[i][k], { sx,-ty,-tz });
+					WpUp[nr3] += dot(m_particleC[i][k], { sx,sy,-tz });
+					WpUp[nr4] += dot(m_particleC[i][k], { -tx,sy,-tz });
+					WpUp[nr5] += dot(m_particleC[i][k], { -tx,-ty,sz });
+					WpUp[nr6] += dot(m_particleC[i][k], { sx,-ty,sz });
+					WpUp[nr7] += dot(m_particleC[i][k], { sx,sy,sz });
+					WpUp[nr8] += dot(m_particleC[i][k], { -tx,sy,sz });
+				}
 			}
 			else {
 				int offset = k == 0 ? n : k == 1 ? m : 1;
@@ -347,15 +357,6 @@ void FlipSimulator::transferVelocities(bool toGrid, float flipRatio, bool useAff
 					m_pre_vel[i][k] = m_vel[i][k] = WpUp[i];
 				}
 			}
-			/*for (int i = 0; i < m_iCellX; i++) {
-				for (int j = 0; j < m_iCellY; j++) {
-					for (int k = 0; k < m_iCellZ; k++) {
-						bool solid = m_type[i * n + j * m + k] == SOLID_CELL;
-						if (solid)
-							m_vel[i * n + j * m + k] = m_pre_vel[i * n + j * m + k];
-					}
-				}
-			}*/
 		}
 	}
 
@@ -494,4 +495,23 @@ void FlipSimulator::onMouse(int x, int y) {
 }
 void FlipSimulator::notifyGravityChanged(float gravity) {
 	m_gravity.y = -gravity;
+}
+Mat3 vecMultVecT(Vec3 a, Vec3 b) {
+	Mat3 c;
+	c[0][0] = a[0] * b[0];
+	c[0][1] = a[0] * b[1];
+	c[0][0] = a[0] * b[2];
+	c[1][0] = a[1] * b[0];
+	c[1][1] = a[1] * b[1];
+	c[1][2] = a[1] * b[2];
+	c[2][0] = a[2] * b[0];
+	c[2][1] = a[2] * b[1];
+	c[2][2] = a[2] * b[2];
+	return c;
+}
+Vec3 MatMultVec(Mat3 M, Vec3 a) {
+	Vec3 b;
+	b[0] = dot(M[0], a);
+	b[1] = dot(M[1], a);
+	b[2] = dot(M[2], a);
 }
