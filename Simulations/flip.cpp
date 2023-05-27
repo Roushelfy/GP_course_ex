@@ -8,7 +8,7 @@ FlipSimulator::FlipSimulator() {
 	m_mouse.x = m_mouse.y = 0;
 	m_trackmouse.x = m_trackmouse.y = 0;
 	m_oldtrackmouse.x = m_oldtrackmouse.y = 0;
-	m_fRatio = 0.7;
+	m_fRatio = 0.95;
 	m_useAffine = 0;
 	m_freso = 22;
 	m_gravity = { 0.0,-9.8,0 };
@@ -225,6 +225,9 @@ void FlipSimulator::updateParticleDensity() {
 
 void FlipSimulator::transferVelocities(bool toGrid, float flipRatio, bool useAffine) {
 	std::vector<float> WpUp(m_iNumCells), Wp(m_iNumCells);
+	if (useAffine && !toGrid) {
+		std::fill(m_particleC.begin(), m_particleC.end(), vector3Dim<Vec3>(Vec3(), Vec3(), Vec3()));
+	}
 	float dx, dy, dz;
 	int n = m_iCellY * m_iCellZ;
 	int m = m_iCellZ;
@@ -313,14 +316,14 @@ void FlipSimulator::transferVelocities(bool toGrid, float flipRatio, bool useAff
 				WpUp[nr7] += pv * d7; Wp[nr7] += d7;
 				WpUp[nr8] += pv * d8; Wp[nr8] += d8;
 				if (useAffine) {
-					WpUp[nr1] += dot(m_particleC[i][k], { -tx,-ty,-tz });
-					WpUp[nr2] += dot(m_particleC[i][k], { sx,-ty,-tz });
-					WpUp[nr3] += dot(m_particleC[i][k], { sx,sy,-tz });
-					WpUp[nr4] += dot(m_particleC[i][k], { -tx,sy,-tz });
-					WpUp[nr5] += dot(m_particleC[i][k], { -tx,-ty,sz });
-					WpUp[nr6] += dot(m_particleC[i][k], { sx,-ty,sz });
-					WpUp[nr7] += dot(m_particleC[i][k], { sx,sy,sz });
-					WpUp[nr8] += dot(m_particleC[i][k], { -tx,sy,sz });
+					WpUp[nr1] += dot(m_particleC[i][k], Vec3(-tx, -ty, -tz)) * d1;
+					WpUp[nr2] += dot(m_particleC[i][k], Vec3(sx, -ty, -tz)) * d2;
+					WpUp[nr3] += dot(m_particleC[i][k], Vec3(sx, sy, -tz)) * d3;
+					WpUp[nr4] += dot(m_particleC[i][k], Vec3(-tx, sy, -tz)) * d4;
+					WpUp[nr5] += dot(m_particleC[i][k], Vec3(-tx, -ty, sz)) * d5;
+					WpUp[nr6] += dot(m_particleC[i][k], Vec3(sx, -ty, sz)) * d6;
+					WpUp[nr7] += dot(m_particleC[i][k], Vec3(sx, sy, sz)) * d7;
+					WpUp[nr8] += dot(m_particleC[i][k], Vec3(-tx, sy, sz)) * d8;
 				}
 			}
 			else {
@@ -340,14 +343,21 @@ void FlipSimulator::transferVelocities(bool toGrid, float flipRatio, bool useAff
 					float picV = (valid1 * d1 * m_vel[nr1][k] + valid2 * d2 * m_vel[nr2][k] + valid3 * d3 * m_vel[nr3][k] + valid4 * d4 * m_vel[nr4][k]
 						+ valid5 * d5 * m_vel[nr5][k] + valid6 * d6 * m_vel[nr6][k] + valid7 * d7 * m_vel[nr7][k] + valid8 * d8 * m_vel[nr8][k]) / d;
 					float corr = (valid1 * d1 * (m_vel[nr1][k] - m_pre_vel[nr1][k]) + valid2 * d2 * (m_vel[nr2][k] - m_pre_vel[nr2][k]) +
-						valid3 * d3 * (m_vel[nr3][k] - m_pre_vel[nr3][k]) + valid4 * d4 * (m_vel[nr4][k] - m_pre_vel[nr2][k])
+						valid3 * d3 * (m_vel[nr3][k] - m_pre_vel[nr3][k]) + valid4 * d4 * (m_vel[nr4][k] - m_pre_vel[nr4][k])
 						+ valid5 * d5 * (m_vel[nr5][k] - m_pre_vel[nr5][k]) + valid6 * d6 * (m_vel[nr6][k] - m_pre_vel[nr6][k])
 						+ valid7 * d7 * (m_vel[nr7][k] - m_pre_vel[nr7][k]) + valid8 * d8 * (m_vel[nr8][k] - m_pre_vel[nr8][k])) / d;
 					float flipV = corr + pv;
 					m_particleVel[i][k] = (1.0 - flipRatio) * picV + flipRatio * flipV;
 				}
+				if (useAffine && d > 0) {
+					m_particleC[i][k] = 4 * (m_vel[nr1][k] * Vec3(-tx, -ty, -tz) * valid1 * d1 + m_vel[nr2][k] * Vec3(sx, -ty, -tz) * valid2 * d2
+						+ m_vel[nr3][k] * Vec3(sx, sy, -tz) * valid3 * d3 + m_vel[nr4][k] * Vec3(-tx, sy, -tz) * valid4 * d4
+						+ m_vel[nr5][k] * Vec3(-tx, -ty, sz) * valid5 * d5 + m_vel[nr6][k] * Vec3(sx, -ty, sz) * valid6 * d6
+						+ m_vel[nr7][k] * Vec3(sx, sy, sz) * valid7 * d7 + m_vel[nr8][k] * Vec3(-tx, sy, sz) * valid8 * d8) / d;
+				}
 			}
 		}
+#pragma omp parallel for
 		if (toGrid) {
 			for (int i = 0; i < m_iNumCells; i++) {
 				if (Wp[i] > 0) {
@@ -514,4 +524,5 @@ Vec3 MatMultVec(Mat3 M, Vec3 a) {
 	b[0] = dot(M[0], a);
 	b[1] = dot(M[1], a);
 	b[2] = dot(M[2], a);
+	return b;
 }
