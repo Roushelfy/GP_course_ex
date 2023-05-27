@@ -8,25 +8,19 @@ FlipSimulator::FlipSimulator() {
 	m_mouse.x = m_mouse.y = 0;
 	m_trackmouse.x = m_trackmouse.y = 0;
 	m_oldtrackmouse.x = m_oldtrackmouse.y = 0;
-	m_fRatio = 0.95;
+	m_fRatio = 0.7;
+	m_useAffine = 0;
 	m_freso = 22;
 	m_gravity = { 0.0,-9.8,0 };
 	m_lightdirection = { -0.5, -0.5, -0.5 };
 }
 void FlipSimulator::integrateParticles(float timestep) {
+#pragma omp parallel for
 	for (int i = 0; i < m_iNumSpheres; i++) {
 		m_particleVel[i] += m_gravity * timestep;
 		m_particlePos[i] += m_particleVel[i] * timestep;
 	}
 	obstaclePos += obstacleVel * timestep;
-	if (obstaclePos[2] > 0.4)
-	{
-		obstacleVel = Vec3(5, 0, -5);
-	}
-	else if (obstaclePos[2] < -0.4)
-	{
-		obstacleVel = Vec3(-5, 0, 5);
-	}
 }
 void FlipSimulator::pushParticlesApart(int numIters) {
 	float colorDiffusionCoeff = 0.01f;
@@ -72,6 +66,7 @@ void FlipSimulator::pushParticlesApart(int numIters) {
 	float minDist2 = minDist * minDist;
 
 	for (int iter = 0; iter < numIters; iter++) {
+#pragma omp parallel for
 		for (int i = 0; i < m_iNumSpheres; i++) {
 			float px = m_particlePos[i].x;
 			float py = m_particlePos[i].y;
@@ -228,7 +223,7 @@ void FlipSimulator::updateParticleDensity() {
 	}
 }
 
-void FlipSimulator::transferVelocities(bool toGrid, float flipRatio) {
+void FlipSimulator::transferVelocities(bool toGrid, float flipRatio, bool useAffine) {
 	std::vector<float> WpUp(m_iNumCells), Wp(m_iNumCells);
 	float dx, dy, dz;
 	int n = m_iCellY * m_iCellZ;
@@ -236,9 +231,11 @@ void FlipSimulator::transferVelocities(bool toGrid, float flipRatio) {
 	if (toGrid) {
 		//m_pre_vel = m_vel;
 		std::fill(m_vel.begin(), m_vel.end(), 0);
+#pragma omp parallel for
 		for (int i = 0; i < m_iNumCells; i++) {
 			m_type[i] = m_s[i] == 0 ? SOLID_CELL : EMPTY_CELL;
 		}
+#pragma omp parallel for
 		for (int i = 0; i < m_iNumSpheres; i++) {
 			int x = (m_particlePos[i].x + 0.5) * m_fInvSpacing;
 			int y = (m_particlePos[i].y + 0.5) * m_fInvSpacing;
@@ -255,10 +252,10 @@ void FlipSimulator::transferVelocities(bool toGrid, float flipRatio) {
 		}
 	}
 	//std::fill(m_vel.begin(), m_vel.end(), 0);
-#pragma omp parallel for
 	for (int k = 0; k < 3; k++) {
 		std::fill(Wp.begin(), Wp.end(), 0);
 		std::fill(WpUp.begin(), WpUp.end(), 0);
+#pragma omp parallel for
 		for (int i = 0; i < m_iNumSpheres; i++) {
 			float x = max((float)min(m_particlePos[i].x + 0.5, 1.0 - m_h), (float)m_h);
 			float y = max((float)min(m_particlePos[i].y + 0.5, 1.0 - m_h), (float)m_h);
@@ -370,6 +367,7 @@ void FlipSimulator::solveIncompressibility(int numIters, float dt, float overRel
 	int m = m_iCellZ;
 	//int cp = m_particleDensity * m_h / dt;
 	for (int iter = 0; iter < numIters; iter++) {
+#pragma omp parallel for
 		for (int i = 1; i < m_iCellX - 1; i++) {
 			for (int j = 1; j < m_iCellY - 1; j++) {
 				for (int k = 1; k < m_iCellZ - 1; k++) {
@@ -413,6 +411,7 @@ void FlipSimulator::solveIncompressibility(int numIters, float dt, float overRel
 void FlipSimulator::updateParticleColors() {
 	int n = m_iCellY * m_iCellZ;
 	int m = m_iCellZ;
+#pragma omp parallel for
 	for (int i = 0; i < m_iNumSpheres; i++) {
 		m_particleColor[i][0] = max(0.0, m_particleColor[i][0] - 0.1);
 		m_particleColor[i][1] = max(0.0, m_particleColor[i][1] - 0.1);
@@ -461,33 +460,38 @@ void FlipSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext) {
 	DUC->drawSphere(obstaclePos, obstacleRadius);
 }
 void FlipSimulator::notifyCaseChanged(int testCase) {}
-void FlipSimulator::externalForcesCalculations(float timeElapsed) {}
-void FlipSimulator::onClick(int x, int y) {
-	obstaclemode = (obstaclemode + 1) % 6;
-	switch (obstaclemode)
+void FlipSimulator::externalForcesCalculations(float timeElapsed) {
+	Point2D mouseDiff;
+	mouseDiff.x = m_trackmouse.x - m_oldtrackmouse.x;
+	mouseDiff.y = m_trackmouse.y - m_oldtrackmouse.y;
+	if (mouseDiff.x != 0 || mouseDiff.y != 0)
 	{
-	case 0:
+		//Mat4 projection = DUC->g_camera.GetProjMatrix();
+		Mat4 worldViewInv = Mat4(DUC->g_camera.GetWorldMatrix() * DUC->g_camera.GetViewMatrix());
+		worldViewInv = worldViewInv.inverse();
+		Vec3 inputView = Vec3((float)mouseDiff.x, (float)-mouseDiff.y, 0);
+		Vec3 inputWorld = worldViewInv.transformVectorNormal(inputView);
+		// find a proper scale!
+		float inputScale = 0.0009f;
+		inputWorld = inputWorld * inputScale;
+		obstaclePos = obstacleFinalPos + inputWorld;
+		obstacleVel = inputWorld / timeElapsed;
+	}
+	else {
+		obstacleFinalPos = obstaclePos;
 		obstacleVel = Vec3();
-		obstaclePos = Vec3(0.0, 0.3, 0.0);
-		break;
-	case 1:
-		obstaclePos = Vec3(-0.3, -0.3, -0.3);
-		break;
-	case 2:
-		obstaclePos = Vec3(-0.3, -0.3, 0.3);
-		break;
-	case 3:
-		obstaclePos = Vec3(0.3, -0.3, 0.3);
-		break;
-	case 4:
-		obstaclePos = Vec3(0.3, -0.3, -0.3);
-		break;
-	case 5:
-		obstacleVel = Vec3(-5, 0, 5);
-		break;
 	}
 }
-void FlipSimulator::onMouse(int x, int y) {}
+void FlipSimulator::onClick(int x, int y) {
+	m_trackmouse.x = x;
+	m_trackmouse.y = y;
+}
+void FlipSimulator::onMouse(int x, int y) {
+	m_oldtrackmouse.x = x;
+	m_oldtrackmouse.y = y;
+	m_trackmouse.x = x;
+	m_trackmouse.y = y;
+}
 void FlipSimulator::notifyGravityChanged(float gravity) {
 	m_gravity.y = -gravity;
 }

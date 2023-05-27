@@ -2,6 +2,7 @@
 #define FLIP_H
 #include "Simulator.h"
 const int EMPTY_CELL = 0; const int FLUID_CELL = 1; const int SOLID_CELL = 2;
+typedef vector3Dim<Vec3> Mat3;
 class FlipSimulator :public Simulator {
 public:
 	// Construtors
@@ -16,9 +17,9 @@ public:
 	// FLIP/PIC ratio
 	float m_fRatio;
 	float m_freso;
-
+	bool m_useAffine;
 	// grid property
-	int obstaclemode;
+	//int obstaclemode;
 	int m_iCellX;
 	int m_iCellY;
 	int m_iCellZ;
@@ -36,10 +37,12 @@ public:
 	std::vector<Vec3> m_particleColor;		// Particle Color for visualization
 	std::vector<Vec3> m_particleVel;		// Particle Velocity
 	Vec3 obstaclePos;     // obstacle can be moved with mouse, as a user interaction
+	Vec3 obstacleFinalPos;
 	Vec3 obstacleVel;
 	float obstacleRadius;
 	// grid data arrays
 	std::vector<Vec3>  m_vel;	  	// Velocity array
+	std::vector<Mat3>  m_c;
 	std::vector<Vec3>  m_pre_vel; 	// Hold the previous velocity for flip update
 	std::vector<float> m_p; 		// Pressure array
 	std::vector<float> m_s; 		// 0.0 for solid cells, 1.0 for fluid cells, used to update m_type
@@ -56,7 +59,7 @@ public:
 	void handleParticleCollisions(Vec3 obstaclePos, float obstacleRadius, Vec3 obstacleVel);
 	void updateParticleDensity();
 
-	void transferVelocities(bool toGrid, float flipRatio);
+	void transferVelocities(bool toGrid, float flipRatio, bool useAffine);
 	void solveIncompressibility(int numIters, float dt, float overRelaxation, bool compensateDrift);
 	void updateParticleColors();
 
@@ -87,10 +90,10 @@ public:
 			if (separateParticles)
 				pushParticlesApart(numParticleIters);
 			handleParticleCollisions(obstaclePos, obstacleRadius, obstacleVel);
-			transferVelocities(true, flipRatio);
+			transferVelocities(true, flipRatio, m_useAffine);
 			updateParticleDensity();
 			solveIncompressibility(numPressureIters, sdt, overRelaxation, compensateDrift);
-			transferVelocities(false, flipRatio);
+			transferVelocities(false, flipRatio, m_useAffine);
 		}
 
 		updateParticleColors();
@@ -102,7 +105,7 @@ public:
 		float tankHeight = 1.0;
 		float tankWidth = 1.0;
 		float tankDepth = 1.0;
-		obstaclemode = 0;
+		//obstaclemode = 0;
 		float _h = tankHeight / res;
 		float point_r = 0.3 * _h;	// particle radius w.r.t. cell size
 
@@ -110,6 +113,7 @@ public:
 		float relWaterWidth = 0.6;
 		float relWaterDepth = 0.6;
 		obstaclePos = Vec3(0.0, 0.3, 0.0);     // obstacle can be moved with mouse, as a user interaction
+		obstacleFinalPos = Vec3(0.0, 0.3, 0.0);
 		obstacleVel = Vec3(0.0f);
 		obstacleRadius = 0.1;
 		// dam break
