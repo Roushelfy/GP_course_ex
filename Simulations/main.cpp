@@ -41,7 +41,7 @@ using namespace GamePhysics;
 DrawingUtilitiesClass* g_pDUC;
 Simulator* g_pSimulator;
 float 	g_fTimestep = 0.001;
-float gravity = 100;
+float gravity = 1000;
 float lightx = -0.5, lighty = -0.5, lightz = -0.5;
 #ifdef ADAPTIVESTEP
 float   g_fTimeFactor = 1;

@@ -8,9 +8,9 @@ FlipSimulator::FlipSimulator() {
 	m_mouse.x = m_mouse.y = 0;
 	m_trackmouse.x = m_trackmouse.y = 0;
 	m_oldtrackmouse.x = m_oldtrackmouse.y = 0;
-	m_fRatio = 0.95;
-	m_useAffine = 0;
-	m_freso = 25;
+	m_fRatio = 0;
+	m_useAffine = 1;
+	m_freso = 30;
 	m_gravity = { 0.0,-9.8,0 };
 	m_lightdirection = { -0.5, -0.5, -0.5 };
 }
@@ -225,9 +225,6 @@ void FlipSimulator::updateParticleDensity() {
 
 void FlipSimulator::transferVelocities(bool toGrid, float flipRatio, bool useAffine) {
 	std::vector<float> WpUp(m_iNumCells), Wp(m_iNumCells);
-	if (useAffine && !toGrid) {
-		std::fill(m_particleC.begin(), m_particleC.end(), vector3Dim<Vec3>(Vec3(), Vec3(), Vec3()));
-	}
 	float dx, dy, dz;
 	int n = m_iCellY * m_iCellZ;
 	int m = m_iCellZ;
@@ -349,30 +346,30 @@ void FlipSimulator::transferVelocities(bool toGrid, float flipRatio, bool useAff
 					float flipV = corr + pv;
 					m_particleVel[i][k] = (1.0 - flipRatio) * picV + flipRatio * flipV;
 				}
-				if (useAffine && d > 0) {
-					m_particleC[i][k] = 4 * (m_vel[nr1][k] * Vec3(-tx, -ty, -tz) * valid1 * d1 + m_vel[nr2][k] * Vec3(sx, -ty, -tz) * valid2 * d2
-						+ m_vel[nr3][k] * Vec3(sx, sy, -tz) * valid3 * d3 + m_vel[nr4][k] * Vec3(-tx, sy, -tz) * valid4 * d4
-						+ m_vel[nr5][k] * Vec3(-tx, -ty, sz) * valid5 * d5 + m_vel[nr6][k] * Vec3(sx, -ty, sz) * valid6 * d6
-						+ m_vel[nr7][k] * Vec3(sx, sy, sz) * valid7 * d7 + m_vel[nr8][k] * Vec3(-tx, sy, sz) * valid8 * d8) / d;
+				if (useAffine) {
+					m_particleC[i][k] = 1 * (m_vel[nr1][k] * Vec3(-tx, -ty, -tz) * d1 + m_vel[nr2][k] * Vec3(sx, -ty, -tz) * d2
+						+ m_vel[nr3][k] * Vec3(sx, sy, -tz) * d3 + m_vel[nr4][k] * Vec3(-tx, sy, -tz) * d4
+						+ m_vel[nr5][k] * Vec3(-tx, -ty, sz) * d5 + m_vel[nr6][k] * Vec3(sx, -ty, sz) * d6
+						+ m_vel[nr7][k] * Vec3(sx, sy, sz) * d7 + m_vel[nr8][k] * Vec3(-tx, sy, sz) * d8);
 				}
 			}
 		}
 		if (toGrid) {
-
-#pragma omp parallel for
-			for (int i = 0; i < m_iCellX; i++) {
-				for (int j = 0; j < m_iCellX; j++) {
-					for (int k_ = 0; k_ < m_iCellZ; k_++) {
-						bool solid = m_type[i * n + j * m + k_] == SOLID_CELL;
-						if (solid || (i > 0 && m_type[i * (n - 1) + j * m + k_] == SOLID_CELL))
-							m_vel[i * n + j * m + k_][k] = m_pre_vel[i * n + j * m + k_][k];
-						if (solid || (i > 0 && m_type[i * n + j * (m - 1) + k_] == SOLID_CELL))
-							m_vel[i * n + j * m + k_][k] = m_pre_vel[i * n + j * m + k_][k];
-						if (solid || (i > 0 && m_type[i * n + j * m + k_ - 1] == SOLID_CELL))
-							m_vel[i * n + j * m + k_][k] = m_pre_vel[i * n + j * m + k_][k];
-					}
-				}
-			}
+			/*
+			#pragma omp parallel for
+						for (int i = 0; i < m_iCellX; i++) {
+							for (int j = 0; j < m_iCellX; j++) {
+								for (int k_ = 0; k_ < m_iCellZ; k_++) {
+									bool solid = m_type[i * n + j * m + k_] == SOLID_CELL;
+									if (solid || (i > 0 && m_type[i * (n - 1) + j * m + k_] == SOLID_CELL))
+										m_vel[i * n + j * m + k_][k] = m_pre_vel[i * n + j * m + k_][k];
+									if (solid || (i > 0 && m_type[i * n + j * (m - 1) + k_] == SOLID_CELL))
+										m_vel[i * n + j * m + k_][k] = m_pre_vel[i * n + j * m + k_][k];
+									if (solid || (i > 0 && m_type[i * n + j * m + k_ - 1] == SOLID_CELL))
+										m_vel[i * n + j * m + k_][k] = m_pre_vel[i * n + j * m + k_][k];
+								}
+							}
+						}*/
 #pragma omp parallel for
 			for (int i = 0; i < m_iNumCells; i++) {
 				if (Wp[i] > 0) {

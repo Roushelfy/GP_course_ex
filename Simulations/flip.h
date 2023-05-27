@@ -135,7 +135,7 @@ public:
 		m_h = 1.0 / float(res);
 		m_fInvSpacing = float(res);
 		m_iNumCells = m_iCellX * m_iCellY * m_iCellZ;
-		m_particleRadius = 0.3 * point_r;
+		m_particleRadius = point_r;
 
 		// update particle array
 		m_particlePos.clear(); m_particlePos.resize(m_iNumSpheres, Vec3(0.0f));
